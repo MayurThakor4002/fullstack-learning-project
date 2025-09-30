@@ -17,6 +17,7 @@ const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 
+
 // View engine & static files setup
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -83,15 +84,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// app.get("/demoUser", async (req, res) => {
-//   let fakeUser = new User({
-//     email: "student@gmail.com",
-//     username: "delta-student",
-//   });
 
-//   let registeredUser = await User.register(fakeUser, "hellojavascript");
-//   res.send(registeredUser);
-// });
 app.get("/listings/search", async (req, res) => {
   const { q } = req.query;
 
@@ -111,6 +104,10 @@ app.get("/listings/search", async (req, res) => {
     console.error("Search Error:", err);
     res.status(500).send("Internal Server Error");
   }
+});
+
+app.get("/", (req, res) => {
+  res.redirect("/listings"); // Redirect to your main listings page
 });
 app.use("/listings", listingRouter);
 app.use("/listings/:id/reviews", reviewRouter);
