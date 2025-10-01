@@ -60,31 +60,45 @@ module.exports.isReviewAuthor = async (req, res, next) => {
 
 module.exports.getCoordinates = async (req, res, next) => {
   try {
-    const location = req.body.listing.location;
+    if (!req.body.listing.location || !req.body.listing.country) {
+      req.flash("error", "Please enter both country and location.");
+      return res.redirect("/listings/new");
+    }
 
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${location}`);
+    const location = `${req.body.listing.location}, ${req.body.listing.country}`;
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`,
+      {
+        headers: {
+          'User-Agent': 'WanderlustApp/1.0 (https://wanderlust-aqhp.onrender.com)',
+          'Accept-Language': 'en'
+        }
+      }
+    );
+
+
+    console.log("Fetch response status:", response.status);
     const data = await response.json();
+    console.log("Data from Nominatim:", data);
 
     if (data.length > 0) {
       const lat = parseFloat(data[0].lat);
       const lon = parseFloat(data[0].lon);
-
-      // ✅ Correct GeoJSON structure for geometry
       req.body.listing.geometry = {
         type: "Point",
-        coordinates: [lon, lat] // GeoJSON = [longitude, latitude]
+        coordinates: [lon, lat],
       };
     } else {
-      req.flash("error", "Location not found. Please try another.");
+      req.flash("error", "Location not found. Please enter a valid location.");
       return res.redirect("/listings/new");
     }
 
-    next();  // Continue to createListing
-
+    next();
   } catch (err) {
     console.error("Error fetching coordinates:", err);
     req.flash("error", "Could not fetch coordinates for the location.");
     return res.redirect("/listings/new");
   }
 };
+
 
